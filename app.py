@@ -160,12 +160,9 @@ def whatsapp():
                             'url': blob.public_url,
                             'type': doc_type.capitalize()
                         })
-                        # Ensure doc_ref is a DocumentReference and access its id attribute
-                        if hasattr(doc_ref, 'id'):
-                            logger.debug(f"Document metadata stored in Firestore with ID: {doc_ref.id}")
-                        else:
-                            logger.error(f"Unexpected response from Firestore: {doc_ref}")
-                        
+                        # Explicitly retrieve the document ID
+                        doc_id = doc_ref.id
+                        logger.debug(f"Document metadata stored in Firestore with ID: {doc_id}")
                         response_message = f"{doc_type.capitalize()} document received and saved."
                     except Exception as e:
                         logger.error(f"Error storing metadata in Firestore: {e}")
@@ -208,3 +205,4 @@ def page_not_found(e):
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+
