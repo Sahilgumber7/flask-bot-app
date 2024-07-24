@@ -160,14 +160,15 @@ def whatsapp():
                             'url': blob.public_url,
                             'type': doc_type.capitalize()
                         })
-                        # Explicitly retrieve the document ID
-                        doc_id = doc_ref.id
-                        logger.debug(f"Document metadata stored in Firestore with ID: {doc_id}")
-                        response_message = f"{doc_type.capitalize()} document received and saved."
+                        logger.debug(f"Document metadata stored in Firestore with ID: {doc_ref.id}")
                     except Exception as e:
                         logger.error(f"Error storing metadata in Firestore: {e}")
                         response_message = "Failed to store document metadata."
-                    
+                        msg.body(response_message)
+                        return str(resp)
+
+                    response_message = f"{doc_type.capitalize()} document received and saved."
+                    msg.body(response_message)
                     # Clear user state
                     user_state.pop(from_number, None)
                 else:
