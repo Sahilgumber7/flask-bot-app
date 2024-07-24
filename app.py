@@ -153,16 +153,24 @@ def whatsapp():
                     logger.debug(f"Metadata set for blob: {blob.metadata}")
 
                     # Store metadata in Firestore
-                    doc_ref = db.collection('documents').add({
-                        'filename': filename,
-                        'content_type': media_content_type,
-                        'url': blob.public_url,
-                        'type': doc_type.capitalize()
-                    })
-                    logger.debug(f"Document metadata stored in Firestore with ID: {doc_ref.id}")
-
-                    response_message = f"{doc_type.capitalize()} document received and saved."
-                    msg.body(response_message)
+                    try:
+                        doc_ref = db.collection('documents').add({
+                            'filename': filename,
+                            'content_type': media_content_type,
+                            'url': blob.public_url,
+                            'type': doc_type.capitalize()
+                        })
+                        # Ensure doc_ref is a DocumentReference and access its id attribute
+                        if hasattr(doc_ref, 'id'):
+                            logger.debug(f"Document metadata stored in Firestore with ID: {doc_ref.id}")
+                        else:
+                            logger.error(f"Unexpected response from Firestore: {doc_ref}")
+                        
+                        response_message = f"{doc_type.capitalize()} document received and saved."
+                    except Exception as e:
+                        logger.error(f"Error storing metadata in Firestore: {e}")
+                        response_message = "Failed to store document metadata."
+                    
                     # Clear user state
                     user_state.pop(from_number, None)
                 else:
