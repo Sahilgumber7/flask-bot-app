@@ -55,7 +55,7 @@ def whatsapp():
 
     try:
         if state == 'greeting':
-            response_message = "Hello! Do you want to send or receive a document? Please reply with 'send' or 'receive'."
+            response_message = "Hello! Do you want to send or receive a document? Please reply with 'send' or 'receive'. To end the chat, reply with 'end'."
             msg.body(response_message)
             user_state[from_number] = 'waiting_for_action'
             logger.debug(f"State updated to 'waiting_for_action' for {from_number}")
@@ -69,8 +69,12 @@ def whatsapp():
                 response_message = "Which document do you want to receive? Please reply with 'Aadhar', 'PAN', or 'Driving License'."
                 msg.body(response_message)
                 user_state[from_number] = 'waiting_for_receive_document_type'
+            elif 'end' in incoming_msg:
+                response_message = "Chat ended. You can start over by sending any message."
+                msg.body(response_message)
+                user_state.pop(from_number, None)
             else:
-                response_message = "Please reply with 'send' or 'receive' to proceed."
+                response_message = "Please reply with 'send', 'receive', or 'end' to proceed."
                 msg.body(response_message)
         
         elif state == 'waiting_for_document_type':
@@ -78,8 +82,12 @@ def whatsapp():
                 user_state[from_number] = {'state': 'waiting_for_document', 'doc_type': incoming_msg}
                 response_message = f"Please send the {incoming_msg} document now."
                 msg.body(response_message)
+            elif 'end' in incoming_msg:
+                response_message = "Chat ended. You can start over by sending any message."
+                msg.body(response_message)
+                user_state.pop(from_number, None)
             else:
-                response_message = "Invalid document type. Please reply with 'Aadhar', 'PAN', or 'Driving License'."
+                response_message = "Invalid document type. Please reply with 'Aadhar', 'PAN', or 'Driving License'. To end the chat, reply with 'end'."
                 msg.body(response_message)
         
         elif state == 'waiting_for_receive_document_type':
@@ -97,8 +105,12 @@ def whatsapp():
                     response_message = f"No {incoming_msg} document found."
                     msg.body(response_message)
                 user_state.pop(from_number, None)
+            elif 'end' in incoming_msg:
+                response_message = "Chat ended. You can start over by sending any message."
+                msg.body(response_message)
+                user_state.pop(from_number, None)
             else:
-                response_message = "Invalid document type. Please reply with 'Aadhar', 'PAN', or 'Driving License'."
+                response_message = "Invalid document type. Please reply with 'Aadhar', 'PAN', or 'Driving License'. To end the chat, reply with 'end'."
                 msg.body(response_message)
         
         elif isinstance(state, dict) and state.get('state') == 'waiting_for_document':
@@ -157,8 +169,12 @@ def whatsapp():
                     response_message = "Failed to download media."
                     msg.body(response_message)
                     logger.error(f"Failed to download media from {media_url}")
+            elif 'end' in incoming_msg:
+                response_message = "Chat ended. You can start over by sending any message."
+                msg.body(response_message)
+                user_state.pop(from_number, None)
             else:
-                response_message = "Please send a document as media."
+                response_message = "Please send a document as media. To end the chat, reply with 'end'."
                 msg.body(response_message)
         
         else:
