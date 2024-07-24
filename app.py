@@ -39,7 +39,6 @@ def download_media(media_url, auth):
     return response.content if response.status_code == 200 else None
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp():
-    
     start_time = time.time()
     incoming_msg = request.values.get('Body', '').lower()
     num_media = int(request.values.get('NumMedia', 0))
@@ -148,7 +147,7 @@ def whatsapp():
                         'type': doc_type.capitalize()
                     })
                     logger.debug(f"Document metadata stored in Firestore: {doc_ref.id}")
-
+                    
                     response_message = f"{doc_type.capitalize()} document received and saved."
                     msg.body(response_message)
                     # Clear user state
@@ -172,6 +171,7 @@ def whatsapp():
         logger.error(f"Error handling message: {e}")
         msg.body("An error occurred while processing your request.")
         return str(resp)
+
 
 @app.route("/status", methods=['POST'])
 def status():
