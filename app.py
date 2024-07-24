@@ -171,13 +171,13 @@ def whatsapp():
 
                     # Store metadata in Firestore
                     try:
-                        doc_ref = db.collection('documents').add({
+                        doc_ref, write_time = db.collection('documents').add({
                             'filename': filename,
                             'content_type': media_content_type,
                             'url': blob.public_url,
                             'type': doc_type.capitalize()
-                        })[0]
-                        logger.debug(f"Document metadata stored in Firestore with ID: {doc_ref.id}")
+                        })
+                        logger.debug(f"Document metadata stored in Firestore with ID: {doc_ref.id} at {write_time}")
                         response_message = f"{doc_type.capitalize()} document received and saved."
                     except Exception as e:
                         logger.error(f"Error storing metadata in Firestore: {e}")
@@ -208,6 +208,7 @@ def whatsapp():
         logger.error(f"Error handling message: {e}")
         msg.body("An error occurred while processing your request.")
         return str(resp)
+
 
 @app.route("/status", methods=['POST'])
 def status():
