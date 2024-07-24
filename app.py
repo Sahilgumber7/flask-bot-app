@@ -69,7 +69,7 @@ def whatsapp():
 
     elif state == 'waiting_for_receive_document_type':
         if incoming_msg in ['aadhar', 'pan', 'driving license']:
-            documents = db.collection('documents').where('type', '==', incoming_msg.capitalize()).stream()
+            documents = db.collection('documents').where('type', '==', incoming_msg.capitalize()).where('user', '==', from_number).stream()
             document_found = False
             for doc in documents:
                 document = doc.to_dict()
@@ -108,7 +108,8 @@ def whatsapp():
                     'filename': filename,
                     'content_type': media_content_type,
                     'url': blob.public_url,
-                    'type': doc_type.capitalize()
+                    'type': doc_type.capitalize(),
+                    'user': from_number
                 })
                 msg.body(f"{doc_type.capitalize()} document received and saved.")
                 user_state.pop(from_number, None)
