@@ -38,6 +38,23 @@ def download_media(media_url, auth):
     response = requests.get(media_url, auth=auth)
     return response.content if response.status_code == 200 else None
 
+def store_metadata_in_firestore(doc_type, media_sid, file_url):
+    try:
+        # Prepare metadata
+        metadata = {
+            'filename': f'{doc_type}_{media_sid}.jpeg',
+            'description': f'{doc_type} document uploaded from WhatsApp',
+            'timestamp': datetime.utcnow().isoformat()
+        }
+
+        # Store metadata in Firestore
+        firestore_db.collection('documents').add(metadata)
+        logging.debug("Document metadata stored in Firestore successfully.")
+        return True
+    except Exception as e:
+        logging.error(f"Error storing metadata in Firestore: {str(e)}")
+        return False
+
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp():
     start_time = time.time()
@@ -154,12 +171,12 @@ def whatsapp():
 
                     # Store metadata in Firestore
                     try:
-                        doc_ref, write_result = db.collection('documents').add({
+                        doc_ref = db.collection('documents').add({
                             'filename': filename,
                             'content_type': media_content_type,
                             'url': blob.public_url,
                             'type': doc_type.capitalize()
-                        })
+                        })[0]
                         logger.debug(f"Document metadata stored in Firestore with ID: {doc_ref.id}")
                         response_message = f"{doc_type.capitalize()} document received and saved."
                     except Exception as e:
@@ -203,5 +220,6 @@ def page_not_found(e):
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+
 
 
