@@ -37,6 +37,7 @@ user_state = {}
 def download_media(media_url, auth):
     response = requests.get(media_url, auth=auth)
     return response.content if response.status_code == 200 else None
+
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp():
     start_time = time.time()
@@ -146,8 +147,8 @@ def whatsapp():
                         'url': blob.public_url,
                         'type': doc_type.capitalize()
                     })
-                    logger.debug(f"Document metadata stored in Firestore: {doc_ref.id}")
-                    
+                    logger.debug(f"Document metadata stored in Firestore with ID: {doc_ref.id}")
+
                     response_message = f"{doc_type.capitalize()} document received and saved."
                     msg.body(response_message)
                     # Clear user state
@@ -172,18 +173,14 @@ def whatsapp():
         msg.body("An error occurred while processing your request.")
         return str(resp)
 
-
 @app.route("/status", methods=['POST'])
 def status():
     return "Status endpoint"
 
 @app.errorhandler(404)
-
 def page_not_found(e):
     logger.error(f"404 Error: {e}")
     return "Page not found", 404
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
-
-
