@@ -154,21 +154,18 @@ def whatsapp():
 
                     # Store metadata in Firestore
                     try:
-                        doc_ref = db.collection('documents').add({
+                        doc_ref, write_result = db.collection('documents').add({
                             'filename': filename,
                             'content_type': media_content_type,
                             'url': blob.public_url,
                             'type': doc_type.capitalize()
                         })
                         logger.debug(f"Document metadata stored in Firestore with ID: {doc_ref.id}")
+                        response_message = f"{doc_type.capitalize()} document received and saved."
                     except Exception as e:
                         logger.error(f"Error storing metadata in Firestore: {e}")
                         response_message = "Failed to store document metadata."
-                        msg.body(response_message)
-                        return str(resp)
-
-                    response_message = f"{doc_type.capitalize()} document received and saved."
-                    msg.body(response_message)
+                    
                     # Clear user state
                     user_state.pop(from_number, None)
                 else:
@@ -206,4 +203,5 @@ def page_not_found(e):
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+
 
