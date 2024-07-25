@@ -41,71 +41,91 @@ def whatsapp():
     state = user_state.get(from_number, 'greeting')
 
     if state == 'greeting':
-        msg.body("Hello! What would you like to do?\n\n" +
-                 "1. *Send a Document*\n" +
-                 "2. *Receive a Document*\n" +
-                 "3. *End the chat*")
+        msg.body("Hello! How can I assist you?\n\n" +
+                 "1. Send docs\n" +
+                 "2. Receive docs\n" +
+                 "3. Show all documents\n" +
+                 "4. End chat")
         user_state[from_number] = 'waiting_for_action'
 
     elif state == 'waiting_for_action':
         if incoming_msg == '1':
             msg.body("Which document do you want to send?\n\n" +
-                     "1. *Aadhar*\n" +
-                     "2. *PAN*\n" +
-                     "3. *Driving License*")
+                     "1. Aadhar Card\n" +
+                     "2. PAN Card\n" +
+                     "3. Form 16\n" +
+                     "4. Bank Statement\n" +
+                     "5. Capital Gain Statement\n" +
+                     "6. House Property Documents\n" +
+                     "7. Other Documents")
             user_state[from_number] = 'waiting_for_document_type'
         elif incoming_msg == '2':
             msg.body("Which document do you want to receive?\n\n" +
-                     "1. *Aadhar*\n" +
-                     "2. *PAN*\n" +
-                     "3. *Driving License*")
+                     "1. Aadhar Card\n" +
+                     "2. PAN Card\n" +
+                     "3. ITR Related Docs")
             user_state[from_number] = 'waiting_for_receive_document_type'
         elif incoming_msg == '3':
+            msg.body("Showing all documents...")
+            documents = db.collection('documents').where('user', '==', from_number).stream()
+            for doc in documents:
+                document = doc.to_dict()
+                msg.body(f"{document['type']}: {document['url']}")
+            user_state.pop(from_number, None)
+        elif incoming_msg == '4':
             msg.body("Chat ended. You can start over by sending any message.")
             user_state.pop(from_number, None)
         else:
             msg.body("Please choose an option:\n" +
-                     "1. *Send a Document*\n" +
-                     "2. *Receive a Document*\n" +
-                     "3. *End the chat*")
+                     "1. Send docs\n" +
+                     "2. Receive docs\n" +
+                     "3. Show all documents\n" +
+                     "4. End chat")
 
     elif state == 'waiting_for_document_type':
-        doc_types = {'1': 'aadhar', '2': 'pan', '3': 'driving license'}
+        doc_types = {
+            '1': 'Aadhar Card', '2': 'PAN Card', '3': 'Form 16', '4': 'Bank Statement',
+            '5': 'Capital Gain Statement', '6': 'House Property Documents', '7': 'Other Documents'
+        }
         doc_type = doc_types.get(incoming_msg)
         if doc_type:
             user_state[from_number] = {'state': 'waiting_for_document', 'doc_type': doc_type}
-            msg.body(f"Please send the {doc_type} document now.")
-        elif incoming_msg == '3':
+            msg.body(f"Please send the {doc_type} now.")
+        elif incoming_msg == '4':
             msg.body("Chat ended. You can start over by sending any message.")
             user_state.pop(from_number, None)
         else:
             msg.body("Invalid option. Please choose again:\n" +
-                     "1. *Aadhar*\n" +
-                     "2. *PAN*\n" +
-                     "3. *Driving License*")
+                     "1. Aadhar Card\n" +
+                     "2. PAN Card\n" +
+                     "3. Form 16\n" +
+                     "4. Bank Statement\n" +
+                     "5. Capital Gain Statement\n" +
+                     "6. House Property Documents\n" +
+                     "7. Other Documents")
 
     elif state == 'waiting_for_receive_document_type':
-        doc_types = {'1': 'aadhar', '2': 'pan', '3': 'driving license'}
+        doc_types = {'1': 'Aadhar Card', '2': 'PAN Card', '3': 'ITR Related Docs'}
         doc_type = doc_types.get(incoming_msg)
         if doc_type:
-            documents = db.collection('documents').where('type', '==', doc_type.capitalize()).where('user', '==', from_number).stream()
+            documents = db.collection('documents').where('type', '==', doc_type).where('user', '==', from_number).stream()
             document_found = False
             for doc in documents:
                 document = doc.to_dict()
-                msg.body(f"Here is your {doc_type} document: {document['url']}")
+                msg.body(f"Here is your {doc_type}: {document['url']}")
                 document_found = True
                 break
             if not document_found:
-                msg.body(f"No {doc_type} document found.")
+                msg.body(f"No {doc_type} found.")
             user_state.pop(from_number, None)
-        elif incoming_msg == '3':
+        elif incoming_msg == '4':
             msg.body("Chat ended. You can start over by sending any message.")
             user_state.pop(from_number, None)
         else:
             msg.body("Invalid option. Please choose again:\n" +
-                     "1. *Aadhar*\n" +
-                     "2. *PAN*\n" +
-                     "3. *Driving License*")
+                     "1. Aadhar Card\n" +
+                     "2. PAN Card\n" +
+                     "3. ITR Related Docs")
 
     elif isinstance(state, dict) and state.get('state') == 'waiting_for_document':
         if num_media > 0:
@@ -121,7 +141,7 @@ def whatsapp():
             media_data = download_media(media_url, auth)
 
             if media_data:
-                filename = f"{doc_type}_{media_sid}.{media_extension}"
+                filename = f"{doc_type.replace(' ', '_').lower()}_{media_sid}.{media_extension}"
                 blob = bucket.blob(f"documents/{filename}")
                 blob.upload_from_string(media_data, content_type=media_content_type)
                 blob.make_public()
@@ -130,18 +150,18 @@ def whatsapp():
                     'filename': filename,
                     'content_type': media_content_type,
                     'url': blob.public_url,
-                    'type': doc_type.capitalize(),
+                    'type': doc_type,
                     'user': from_number
                 })
-                msg.body(f"{doc_type.capitalize()} document received and saved.")
+                msg.body(f"{doc_type} received and saved.")
                 user_state.pop(from_number, None)
             else:
                 msg.body("Failed to download media.")
-        elif incoming_msg == '3':
+        elif incoming_msg == '4':
             msg.body("Chat ended. You can start over by sending any message.")
             user_state.pop(from_number, None)
         else:
-            msg.body("Please send a document as media. To end the chat, reply with '3'.")
+            msg.body("Please send a document as media. To end the chat, reply with '4'.")
 
     else:
         msg.body("An error occurred. Please start over.")
@@ -154,3 +174,4 @@ def page_not_found(e):
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+ 
