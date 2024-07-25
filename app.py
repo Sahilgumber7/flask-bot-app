@@ -41,21 +41,29 @@ def whatsapp():
     state = user_state.get(from_number, 'greeting')
 
     if state == 'greeting':
-        msg.body("Hello! Do you want to send or receive a document? Please reply with 'send' or 'receive'. To end the chat, reply with 'end'.")
+        msg.body("Hello! What would you like to do?")
+        msg.button("Send a Document", "Send")
+        msg.button("Receive a Document", "Receive")
         user_state[from_number] = 'waiting_for_action'
 
     elif state == 'waiting_for_action':
         if 'send' in incoming_msg:
-            msg.body("Which document do you want to send? Please reply with 'Aadhar', 'PAN', or 'Driving License'.")
+            msg.body("Which document do you want to send?")
+            msg.button("Aadhar", "Aadhar")
+            msg.button("PAN", "PAN")
+            msg.button("Driving License", "Driving License")
             user_state[from_number] = 'waiting_for_document_type'
         elif 'receive' in incoming_msg:
-            msg.body("Which document do you want to receive? Please reply with 'Aadhar', 'PAN', or 'Driving License'.")
+            msg.body("Which document do you want to receive?")
+            msg.button("Aadhar", "Aadhar")
+            msg.button("PAN", "PAN")
+            msg.button("Driving License", "Driving License")
             user_state[from_number] = 'waiting_for_receive_document_type'
         elif 'end' in incoming_msg:
             msg.body("Chat ended. You can start over by sending any message.")
             user_state.pop(from_number, None)
         else:
-            msg.body("Please reply with 'send', 'receive', or 'end' to proceed.")
+            msg.body("Please choose an option.")
 
     elif state == 'waiting_for_document_type':
         if incoming_msg in ['aadhar', 'pan', 'driving license']:
@@ -65,7 +73,7 @@ def whatsapp():
             msg.body("Chat ended. You can start over by sending any message.")
             user_state.pop(from_number, None)
         else:
-            msg.body("Invalid document type. Please reply with 'Aadhar', 'PAN', or 'Driving License'. To end the chat, reply with 'end'.")
+            msg.body("Invalid document type. Please choose again.")
 
     elif state == 'waiting_for_receive_document_type':
         if incoming_msg in ['aadhar', 'pan', 'driving license']:
@@ -83,7 +91,7 @@ def whatsapp():
             msg.body("Chat ended. You can start over by sending any message.")
             user_state.pop(from_number, None)
         else:
-            msg.body("Invalid document type. Please reply with 'Aadhar', 'PAN', or 'Driving License'. To end the chat, reply with 'end'.")
+            msg.body("Invalid document type. Please choose again.")
 
     elif isinstance(state, dict) and state.get('state') == 'waiting_for_document':
         if num_media > 0:
